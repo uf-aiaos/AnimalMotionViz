@@ -1,0 +1,2 @@
+The sample demo video clip provided was collected as part of the video data described in the Marin et al. 2024 paper, which was approved by the University of Florida IACUC (study #201909416).
+- Marin, M.U., Gingerich, K.N., Wang, J., Yu, H. and Miller-Cushon, E.K., 2024. Effects of space allowance on patterns of activity in group-housed dairy calves. *JDS Communications*.
