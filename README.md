@@ -212,9 +212,10 @@ Run the video analysis to track and visualize animal motion patterns based on th
 
 <!-- References -->
 ## References <a name="section-reference"></a>
-If you use the materials provided in this repository, we kindly ask you to cite our paper: 
+If you use the materials provided in this repository, we kindly ask you to cite our papers: 
 
-- Marin, M.U., Gingerich, K.N., Wang, J., Yu, H. and Miller-Cushon, E.K., 2024. Effects of space allowance on patterns of activity in group-housed dairy calves. *JDS Communications*.
+- The software paper: coming soon! 
+- The application paper: Marin, M.U., Gingerich, K.N., Wang, J., Yu, H. and Miller-Cushon, E.K., 2024. Effects of space allowance on patterns of activity in group-housed dairy calves. *JDS Communications*.
 
 
 
