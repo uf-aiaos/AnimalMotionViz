@@ -30,7 +30,7 @@ dependencies:
       - dash-uploader==0.6.0
       - flask==3.0.3
       - idna==3.7
-      - imageio==2.35.1
+      - "imageio[ffmpeg]"
       - importlib-metadata==7.1.0
       - itsdangerous==2.2.0
       - jinja2==3.1.4
