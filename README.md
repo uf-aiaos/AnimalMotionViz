@@ -80,7 +80,7 @@ conda env create -f environment.yml
 conda activate animalmotionviz
 ```
 
-### 2.5 Run "AnimalMotionViz""<a name="section-2-5"></a>
+### 2.5 Run "AnimalMotionViz"<a name="section-2-5"></a>
 ```bash
 # change to the source code directory 
 cd AnimalMotionViz_sourcecode/
@@ -121,7 +121,7 @@ labelme --version
 # opening the app
 labelme 
 ```
-![image](https://github.com/uf-aiaos/AnimalMotionViz/assets/86480716/3e102ac2-ebf9-49f9-8057-faf6523016a1)
+![image](AnimalMotionViz_sourcecode/assets/labelme.png)
 
 #### 3.1.5 Creating a mask for the region of interest using `LabelMe` <a name="section-3-1-5"></a>
 
