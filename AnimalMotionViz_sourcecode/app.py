@@ -14,6 +14,8 @@ import imageio
 from dash import callback_context
 import dash_uploader as du
 import uuid
+from shapely.geometry import MultiPoint
+from scipy.stats import gaussian_kde
 
 FONT_AWESOME = (
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -241,11 +243,34 @@ kernel_size = html.Div([
 
 html.Br(),
 
-# Step 6: Selecting Alpha 
+# Step 6: Setting up the contours threshold
+contours_thresh = html.Div([
+    html.Label(
+        'Step 6: Set a threshold value to filter the detected motions for calculating the core and full range. A larger threshold removes more small movements and noise.', 
+        style={
+            'font-weight': '700', 
+            'font-size': '15px', 
+            'margin': '0px'
+        }
+    ),
+    dcc.Input(
+        id='contours-thresh-input',
+        type="number",
+        debounce=True,
+        required=True,
+        value=0,
+        min=0,
+        style={'margin': '20px', 'width': '98%'}
+    ),
+]),
+
+html.Br(),
+
+# Step 7: Selecting Alpha 
 alpha_input = html.Div([
     html.Label(
         [
-        'Step 6: Specify the value of the `alpha` (a weight ranging from 0 to 1.0 that controls the contribution of the orginal frame to the final output). See the ',
+        'Step 7: Specify the value of the `alpha` (a weight ranging from 0 to 1.0 that controls the contribution of the orginal frame to the final output). See the ',
             html.A('doc', href='https://github.com/uf-aiaos/AnimalMotionViz', target='_blank'),
             ' for details.'
         ], 
@@ -270,11 +295,11 @@ alpha_input = html.Div([
 
 html.Br(),
 
-# Step 7: Selecting Beta 
+# Step 8: Selecting Beta 
 beta_input = html.Div([
     html.Label(
         [
-        'Step 7: Specify the value of the `beta` (a weight ranging from 0 to 1.0 that controls the contribution of the motion patterns to the final output). See the ',
+        'Step 8: Specify the value of the `beta` (a weight ranging from 0 to 1.0 that controls the contribution of the motion patterns to the final output). See the ',
             html.A('doc', href='https://github.com/uf-aiaos/AnimalMotionViz', target='_blank'),
             ' for details.'
         ], 
@@ -299,10 +324,10 @@ beta_input = html.Div([
 
 html.Br(),
 
-# Step 8: Selecting colormap
+# Step 9: Selecting colormap
 colormap_div = html.Div([
     html.Label(
-        'Step 8: Choose a colormap for visualzing the resulting motion patterns.', 
+        'Step 9: Choose a colormap for visualzing the resulting motion patterns.', 
         style={
             'font-weight': '700', 
             'font-size': '15px', 
@@ -322,10 +347,10 @@ colormap_div = html.Div([
 
 html.Br(),
 
-# Step 9: Button to trigger the processing of a video file and display outputs 
+# Step 10: Button to trigger the processing of a video file and display outputs 
 button = html.Div([
     html.Label(
-        'Step 9: Run the analysis', 
+        'Step 10: Run the analysis', 
         style={
             'font-weight': '700', 
             'font-size': '15px', 
@@ -420,6 +445,14 @@ heatmap_img = html.Div(
 
 html.Br(),
 
+# Placeholder for displaying core range
+core_img = html.Div(
+    id='output-core', 
+    style={'margin': '10px 0px 10px 0px'}
+),
+
+html.Br(),
+
 # Placeholder for displaying the motion heatmap video
 processed_vid = html.Div(
     id='output-video', 
@@ -429,24 +462,50 @@ processed_vid = html.Div(
 html.Br(),
 
 # Metrics Table using AG Grid
+getRowStyle={
+    "styleConditions": [
+        {
+            "condition": "params.rowIndex < 8",
+            "style": {"backgroundColor": "sandybrown"}  
+        },
+        {
+            "condition": 'params.node.rowIndex >= 8',
+            "style": {"backgroundColor": "lightblue"}  
+        }
+    ]
+}
+
 metrics_table = html.Div([
     dag.AgGrid(
         id='metrics-ag-grid',
         columnDefs=[
-            {'headerName': 'Metric', 'field': 'Metric', 'width': 280},
-            {'headerName': 'Value', 'field': 'Value', 'width': 120},
-            {'headerName': 'Description', 'field': 'Description', 'width': 610}
+            {'headerName': 'Metric', 'field': 'Metric', 'width': 290},
+            {'headerName': 'Description', 'field': 'Description', 'width': 645},
+            {'headerName': 'Value', 'field': 'Value', 'width': 220},
         ],
         rowData=[],                         # Initially empty, will be updated in the callback
         columnSize="autoSizeAllColumns",
+        getRowStyle=getRowStyle,
         csvExportParams={'filename': 'metrics.csv'},
         style={
-            'height': '385px', 
+            'height': '450px', 
             'width': '98%', 
             'margin': '10px 0px 10px 0px'
         },
     ),
 ]),
+
+footnote = html.Div(
+    [
+        "The rows highlighted in orange represent results from the motion heatmap image on the left, while the rows highlighted in light blue represent results from the core and full range image on the right."
+    ], 
+    style={
+        'textAlign': 'left',
+        'fontSize': '16px',
+        'marginTop': '10px'
+    }
+)
+
 
 html.Br(),
 
@@ -532,6 +591,27 @@ def calculate_quadrant_percentage(heatmap):
     
     return q1_percentage_str, q2_percentage_str, q3_percentage_str, q4_percentage_str
 
+# function to visualize core and full range
+def overlay_core_on_frame(first_frame, full_positions, core_positions):
+    # Create a copy of the first frame to draw on
+    frame_copy = first_frame.copy()
+
+    # Draw all detected positions as small blue dots
+    for pos in full_positions:
+        cv2.circle(frame_copy, (int(pos[0]), int(pos[1])), radius=3, color=(255, 0, 0), thickness=-1)
+
+    # Highlight core range positions as larger red dots
+    for pos in core_positions:
+        cv2.circle(frame_copy, (int(pos[0]), int(pos[1])), radius=6, color=(0, 0, 255), thickness=-1)
+
+    # draw a convex hull around all positions
+    if len(full_positions) > 2:
+        hull = MultiPoint(full_positions).convex_hull
+        if not hull.is_empty:
+            points = np.array(hull.exterior.coords, dtype=np.int32)
+            cv2.polylines(frame_copy, [points], isClosed=True, color=(0, 255, 255), thickness=2)
+
+    return frame_copy
 
 # Processing function
 def process_video(contents, 
@@ -539,6 +619,7 @@ def process_video(contents,
                   bg_subtractor_name='MOG2', 
                   freq=1,
                   k_size=3,
+                  thresh_size=0,
                   alpha=0.9, 
                   beta=0.4, 
                   colormap_name='Hot'
@@ -569,6 +650,9 @@ def process_video(contents,
     first_iteration_indicator = 1
     processed_frames = []
 
+    # Positions to track centroids
+    positions = []
+
     # Metrics
     metrics = {
         'Peak Intensity Locations': [],
@@ -576,7 +660,8 @@ def process_video(contents,
         'Quadrant 1 Percentage of Used Region': [],
         'Quadrant 2 Percentage of Used Region': [],
         'Quadrant 3 Percentage of Used Region': [],
-        'Quadrant 4 Percentage of Used Region': []
+        'Quadrant 4 Percentage of Used Region': [],
+        'Full Range Convex Hull Area': []
     }
     
     # Process all frames of the video
@@ -618,6 +703,16 @@ def process_video(contents,
 
             # Accumulate motion over time 
             accum_motion = cv2.add(accum_motion, th1_mask)
+
+            # Find contours to locate movement
+            contours, _ = cv2.findContours(th1_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                if cv2.contourArea(contour) > thresh_size:  # Filter noise
+                    M = cv2.moments(contour)
+                    if M['m00'] != 0:
+                        cx = int(M['m10'] / M['m00'])
+                        cy = int(M['m01'] / M['m00'])
+                        positions.append([cx, cy])
             
             # Create motion heatmap
             color_image_video = cv2.applyColorMap(accum_motion, mode)
@@ -630,6 +725,39 @@ def process_video(contents,
             
     # Obtain heatmap from the processed frame
     heatmap = copy.deepcopy(accum_motion)
+
+    # Core and Full Range Calculation
+    if positions:
+        positions_np = np.array(positions)
+
+        # Kernel Density Estimation
+        kde = gaussian_kde(positions_np.T)
+        densities = kde(positions_np.T)
+
+        # Find the 50% densest area
+        density_threshold = np.percentile(densities, 50)
+        core_positions = positions_np[densities >= density_threshold]
+        print(f"Core Range (50% densest positions): {core_positions}")
+
+        # Sort points by density and select 95% isopleth
+        full_threshold = np.percentile(densities, 5)  # Exclude the lowest 5% of densities
+        full_positions = positions_np[densities > full_threshold]
+        print(f"Full Range (95% densest positions): {full_positions}")
+
+        core_points = MultiPoint(core_positions)
+        convex_core = core_points.convex_hull
+        full_points = MultiPoint(full_positions)
+        convex_full = full_points.convex_hull
+
+        # Visualizing core and full range
+        core_image = overlay_core_on_frame(first_frame, full_positions, core_positions)
+        
+        core_range = convex_core.area
+        full_range = convex_full.area
+        print(f"Core Range Convex Hull Area: {core_range}")
+        print(f"Full Range Convex Hull Area: {full_range}")
+    else:
+        print("No positions detected for Core Range and Full Range calculations.")
 
     # Find top three peak intensity locations in the heatmap
     location = find_peak_locations(heatmap, 3)
@@ -667,18 +795,21 @@ def process_video(contents,
     metrics['Quadrant 2 Percentage of Used Region'] = q2_percentage_str
     metrics['Quadrant 3 Percentage of Used Region'] = q3_percentage_str
     metrics['Quadrant 4 Percentage of Used Region'] = q4_percentage_str
+    metrics['Core Range Convex Hull Area'] = core_range
+    metrics['Full Range Convex Hull Area'] = full_range
             
     capture.release()
     cv2.destroyAllWindows()
     
     print("Video processing completed.")
-    return result_overlay, processed_frames, metrics, fps # return the fps for converting the processed frames to output video; this will ensure the output and input videos have same length in time 
+    return result_overlay, processed_frames, core_image, metrics, fps # return the fps for converting the processed frames to output video; this will ensure the output and input videos have same length in time 
 
 
 
 # Main Callback Decorator and Callback Function
 @app.callback(
     Output('output-heatmap', 'children'),
+    Output('output-core', 'children'),
     Output('output-video', 'children'),
     Output('metrics-ag-grid', 'rowData'),
     [Input('dash-uploader', 'isCompleted'),
@@ -689,6 +820,7 @@ def process_video(contents,
      State('bg-subtractor-dropdown', 'value'),
      State('freq-numeric-input', 'value'),
      State('ksize-numeric-input', 'value'),
+     State('contours-thresh-input', 'value'),
      State('alpha-numeric-input', 'value'),
      State('beta-numeric-input', 'value'),
      State('colormap-dropdown', 'value')],
@@ -703,6 +835,7 @@ def update_processed_video(is_completed,
                            bg_subtractor_name, 
                            freq,
                            k_size,
+                           thresh_size,
                            alpha, 
                            beta, 
                            colormap_name
@@ -721,17 +854,18 @@ def update_processed_video(is_completed,
         upload_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
         for file_name in file_names:
             file_path = os.path.join(upload_folder, file_name)
-            result_overlay, processed_frames, metrics, fps = process_video(file_path, 
+            result_overlay, processed_frames, core_image, metrics, fps = process_video(file_path, 
                                                                     mask_contents, 
                                                                     bg_subtractor_name,
                                                                     freq,
-                                                                    k_size,  
+                                                                    k_size,
+                                                                    thresh_size,
                                                                     alpha, 
                                                                     beta, 
                                                                     colormap_name
                                                                     )
             
-            if result_overlay is not None and processed_frames is not None:
+            if result_overlay is not None and core_image is not None and processed_frames is not None:
                 # Save the last frame with overlay to a temporary file
                 with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
                     temp_file_path = temp_file.name
@@ -746,6 +880,17 @@ def update_processed_video(is_completed,
                 
                 # Remove the temporary file
                 os.remove(temp_file_path)
+
+                # for the core and full range visualization
+                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+                    temp_file_path2 = temp_file.name
+                    cv2.imwrite(temp_file_path2, core_image)
+
+                with open(temp_file_path2, 'rb') as file2:
+                    img_data2 = file2.read()
+
+                img_base64_2 = base64.b64encode(img_data2).decode('utf-8')
+                os.remove(temp_file_path2)
                 
                 # html tag for the heatmap image
                 motionheatmap_image = dcc.Graph(
@@ -754,8 +899,8 @@ def update_processed_video(is_completed,
                         "data": [],
                         "layout": {
                             "autosize": True,
-                            "width": 1080,
-                            "height": 600,
+                            "width": 512,
+                            "height": 288,
                             "plot_bgcolor": "#FFF",
                             "paper_bgcolor": "#FFF",
                             "margin": {"l": 5, "b": 5, "t": 5, "r": 5}, 
@@ -777,6 +922,51 @@ def update_processed_video(is_completed,
                             "images": [
                                 {
                                     "source": f"data:image/jpg;base64,{img_base64}",
+                                    "x": 0,
+                                    "y": 0,
+                                    "sizex": 3840,
+                                    "sizey": 2160,
+                                    "xref": "x",
+                                    "yref": "y",
+                                    "yanchor": "bottom",
+                                    "sizing": "contain",
+                                    "layer": "above",
+                                }
+                            ],
+                        },
+                    },
+                )
+
+                # html tag for the core and full range image
+                core_image = dcc.Graph(
+                    id="core-range-graph",
+                    figure={
+                        "data": [],
+                        "layout": {
+                            "autosize": True,
+                            "width": 512,
+                            "height": 288,
+                            "plot_bgcolor": "#FFF",
+                            "paper_bgcolor": "#FFF",
+                            "margin": {"l": 5, "b": 5, "t": 5, "r": 5}, 
+                            "dragmode": "select", 
+                            "xaxis": {
+                                "range": (0, 3840),
+                                "tickwidth": 1,
+                                "scaleratio": 1,
+                                "scaleanchor": "y",
+                                "color": "white",
+                                "gridcolor": "#FFF",
+                            },
+                            "yaxis": {
+                                "range": (0, 2160),
+                                "tickwidth": 1,
+                                "color": "white",
+                                "gridcolor": "#FFF",
+                            },
+                            "images": [
+                                {
+                                    "source": f"data:image/jpg;base64,{img_base64_2}",
                                     "x": 0,
                                     "y": 0,
                                     "sizex": 3840,
@@ -833,15 +1023,15 @@ def update_processed_video(is_completed,
                                     'The point with the third largest movements, marked by a blue triangle shape.']
                 
                 # Prepare metrics data for the AG Grid
-                peak_locations_data = [{'Metric': 'Peak Intensity Location', 'Value': str(location), 'Description': fixed_descriptions[i]} for i, location in enumerate(metrics['Peak Intensity Locations'])]
+                peak_locations_data = [{'Metric': 'Peak Intensity Location', 'Description': fixed_descriptions[i], 'Value': str(location)} for i, location in enumerate(metrics['Peak Intensity Locations'])]
                 peak_locations_df = pd.DataFrame(peak_locations_data)
 
                 # Create a DataFrame for overall percentage
                 overall_percentage_df = pd.DataFrame(
                     {
                         'Metric': ['Overall Percentage of Used Region'], 
-                        'Value': [metrics['Overall Percentage of Used Region']], 
-                        'Description': 'The ratio of movement area to the total available space.'
+                        'Description': 'The ratio of movement area to the total available space.',
+                        'Value': [metrics['Overall Percentage of Used Region']] 
                     }
                 )
                 
@@ -849,32 +1039,49 @@ def update_processed_video(is_completed,
                 q1_percentage_df = pd.DataFrame(
                     {
                         'Metric': ['Quadrant 1 Percentage of Used Region'], 
-                        'Value': [metrics['Quadrant 1 Percentage of Used Region']], 
-                        'Description': 'The ratio of movement area to the total available space in top-right quadrant.'
+                        'Description': 'The ratio of movement area to the total available space in top-right quadrant.',
+                        'Value': [metrics['Quadrant 1 Percentage of Used Region']]
                     }
                 )
 
                 q2_percentage_df = pd.DataFrame(
                     {
                         'Metric': ['Quadrant 2 Percentage of Used Region'], 
-                        'Value': [metrics['Quadrant 2 Percentage of Used Region']], 
-                        'Description': 'The ratio of movement area to the total available space in top-left quadrant.'
+                        'Description': 'The ratio of movement area to the total available space in top-left quadrant.',
+                        'Value': [metrics['Quadrant 2 Percentage of Used Region']]
                     }
                 )
 
                 q3_percentage_df = pd.DataFrame(
                     {
                         'Metric': ['Quadrant 3 Percentage of Used Region'], 
-                        'Value': [metrics['Quadrant 3 Percentage of Used Region']], 
-                        'Description': 'The ratio of movement area to the total available space in bottom-left quadrant.'
+                        'Description': 'The ratio of movement area to the total available space in bottom-left quadrant.',
+                        'Value': [metrics['Quadrant 3 Percentage of Used Region']]
                     }
                 )
 
                 q4_percentage_df = pd.DataFrame(
                     {
                         'Metric': ['Quadrant 4 Percentage of Used Region'], 
-                        'Value': [metrics['Quadrant 4 Percentage of Used Region']], 
-                        'Description': 'The ratio of movement area to the total available space in bottom-right quadrant.'
+                        'Description': 'The ratio of movement area to the total available space in bottom-right quadrant.',
+                        'Value': [metrics['Quadrant 4 Percentage of Used Region']]
+                    }
+                )
+
+                # dataframe for core and full range metrics
+                core_range_df = pd.DataFrame(
+                    {
+                        'Metric': ['Core Range (50% Isopleth)'], 
+                        'Description': 'The area shown in blue, representing regions where animals spend 50% of their time.',
+                        'Value': [f"{metrics['Core Range Convex Hull Area']} pixels"]
+                    }
+                )
+
+                full_range_df = pd.DataFrame(
+                    {
+                        'Metric': ['Full Range (95% Isopleth)'], 
+                        'Description': 'The area enclosed by the yellow convex hull, containing 95% of the observed animal locations.',
+                        'Value': [f"{metrics['Full Range Convex Hull Area']} pixels"]
                     }
                 )
 
@@ -886,7 +1093,9 @@ def update_processed_video(is_completed,
                         q1_percentage_df, 
                         q2_percentage_df, 
                         q3_percentage_df, 
-                        q4_percentage_df
+                        q4_percentage_df,
+                        core_range_df,
+                        full_range_df
                     ], 
                     ignore_index=True
                 )
@@ -896,9 +1105,9 @@ def update_processed_video(is_completed,
                 
                 print("Processed video ready for display.")
                 # Display the last frame with overlay, motion heatmap video, and AG Grid table in the app
-                return motionheatmap_image, video_tag, row_data
+                return motionheatmap_image, core_image, video_tag, row_data
 
-    return html.Div(), html.Div(), []  # Return empty divs if no output to display
+    return html.Div(), html.Div(), html.Div(), []  # Return empty divs if no output to display
 
 # Flask route for serving the video file
 @app.server.route('/video_feed/<video_filename>')
@@ -942,7 +1151,8 @@ app.layout = html.Div([
             dbc.Row(mask_val), 
             dbc.Row(background_sub),
             dbc.Row(freq_size),
-            dbc.Row(kernel_size), 
+            dbc.Row(kernel_size),
+            dbc.Row(contours_thresh),
             dbc.Row(alpha_input),
             dbc.Row(beta_input),
             dbc.Row(colormap_div),
@@ -953,7 +1163,7 @@ app.layout = html.Div([
         ],
         width=3,
         style={
-            "height": 1650, 
+            "height": 1800, 
             "width": 700,
             "border": "5px solid #0021A5",
             "marginTop": 40,
@@ -979,7 +1189,19 @@ app.layout = html.Div([
                     dbc.Tabs(
                         [
                             dbc.Tab(
-                                heatmap_img, 
+                                dbc.Row([
+                                    dbc.Col(
+                                        heatmap_img,
+                                        width=6,
+                                        style={'padding': '10px'},
+                                    ),
+                                    dbc.Col(
+                                        core_img,
+                                        width=6,
+                                        style={'padding': '10px'},
+                                    ),
+                                    ]
+                                ), 
                                 label='Motion patterns in image',
                                 label_style={
                                     'font-family': 'Impact', 
@@ -1025,7 +1247,8 @@ app.layout = html.Div([
                         ]
                     ),
                 ),
-                dbc.Row(metrics_table)
+                dbc.Row(metrics_table),
+                dbc.Row(footnote)
             ],
             color='#0021A5',
             type='border',
