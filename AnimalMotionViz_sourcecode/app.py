@@ -1072,7 +1072,7 @@ def update_processed_video(is_completed,
                 core_range_df = pd.DataFrame(
                     {
                         'Metric': ['Core Range (50% Isopleth)'], 
-                        'Description': 'The area shown in blue, representing regions where animals spend 50% of their time.',
+                        'Description': 'The red region highlights the most intensely used 50% of the total area where animals frequently moved or stayed.',
                         'Value': [f"{metrics['Core Range Convex Hull Area']} pixels"]
                     }
                 )
@@ -1080,7 +1080,7 @@ def update_processed_video(is_completed,
                 full_range_df = pd.DataFrame(
                     {
                         'Metric': ['Full Range (95% Isopleth)'], 
-                        'Description': 'The area enclosed by the yellow convex hull, containing 95% of the observed animal locations.',
+                        'Description': 'The region within the yellow line represents the smallest convex polygon that encloses 95% of the total movement area, including the red and blue regions.',
                         'Value': [f"{metrics['Full Range Convex Hull Area']} pixels"]
                     }
                 )
