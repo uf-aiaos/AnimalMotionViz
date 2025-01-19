@@ -39,7 +39,7 @@ An interactive software tool for tracking and visualizing animal motion patterns
     - [4.2.8:  Select a colormap](#section-4-2-8)
     - [4.2.9:  Start the video processing](#section-4-2-9)
 - [Section 5: Results](#section-5)
-  - [5.1: Motion heatmap image and video](#section-5-1)
+  - [5.1: Motion heatmap image, core and full-range image, and video](#section-5-1)
   - [5.2: Motion metrics](#section-5-2)
 - [Contact information and help](#section-contact)
 - [References](#section-reference)
