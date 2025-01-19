@@ -327,7 +327,7 @@ html.Br(),
 # Step 9: Selecting colormap
 colormap_div = html.Div([
     html.Label(
-        'Step 9: Choose a colormap for visualzing the resulting motion patterns.', 
+        'Step 9: Choose a colormap for visualizing the resulting motion patterns.', 
         style={
             'font-weight': '700', 
             'font-size': '15px', 
