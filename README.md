@@ -19,7 +19,7 @@ An interactive software tool for tracking and visualizing animal motion patterns
   - [2.4: Activating the created Conda environment "animalmotionviz"](#section-2-4)
   - [2.5: Running "AnimalMotionViz"](#section-2-5)
 - [Section 3 (optional): Creating a custom mask for tracking motion patterns in a specific region](#section-3)
-  - [3.1: Creating a Mask using LabelMe](#section-3-1)
+  - [3.1: Creating a mask using LabelMe](#section-3-1)
     - [3.1.1:  Creating a Conda environment with Python installed](#section-3-1-1)
     - [3.1.2:  Installing LabelMe](#section-3-1-2)
     - [3.1.3:  Checking the installed LabelMe version](#section-3-1-3)
@@ -49,11 +49,11 @@ An interactive software tool for tracking and visualizing animal motion patterns
 <!-- Introduction -->
 ## Introduction<a name="introduction"></a>
 
-To provide novel insight into the movement and space use of dairy cattle, we developed `AnimalMotionViz`, an open-source software tool that processes video data to monitor animal movement patterns using computer vision. The software generates a space-use distribution map image, a space-use distribution map video, a core and full-range image, and motion metrics, including the total and within-quadrant percentages of area used, as well as the top three peak intensity locations. This software tool aims to support the broader adoption of computer vision systems, thereby further enabling precision livestock farming. 
+To provide novel insights into the movement and space use of dairy cattle, we developed `AnimalMotionViz`, an open-source software tool that processes video data to monitor animal movement patterns using computer vision. The software generates a space-use distribution map image, a space-use distribution map video, a core and full-range image, and motion metrics, including the total and within-quadrant percentages of area used, as well as the top three peak intensity locations. This software tool aims to support the broader adoption of computer vision systems, thereby further enabling precision livestock farming. 
 
 ## Section 1: Video demonstration of AnimalMotionViz <a name="section-1"></a>
 
-We provide a video demo below to showcase the usage of our `AnimalMotionViz` software.
+We provided an online video to demonstrate how to use our AnimalMotionViz software.
 
 ### 1.1 AnimalMotionViz online demonstration video [[Video demo](https://youtu.be/ar-coaOhjsk)]<a name="section-1-1"></a>
 
@@ -89,13 +89,13 @@ cd AnimalMotionViz_sourcecode/
 # run the app 
 python app.py
 ```
-After that, open the follow link http://127.0.0.1:8050/ in your web brower and now you can use AnimalMotionViz locally!
+After that, open the following link http://127.0.0.1:8050/ in your web browser, and you can now use AnimalMotionViz locally!
 
 ## Section 3 (optional): Creating a custom mask for tracking motion patterns in a specific region <a name="section-3"></a>
 
-### 3.1 Creating a Mask using `LabelMe` <a name="section-3-1"></a>
+### 3.1 Creating a mask using `LabelMe` <a name="section-3-1"></a>
 
-For users interested in tracking animal motion patterns within a specific region, a mask image can be uploaded that is created using annotation tools, allowing a region of interest to be specified in the image. While this step is optional, it is recommended as it enables the definition of specific areas to be considered during video processing, thereby increasing the focus and relevance of the analysis. Below, we have provided a tutorial on creating a mask image using the open-source graphical annotation tool [LabelMe](https://github.com/labelmeai/labelme). 
+For users interested in tracking animal motion patterns within a specific region, a mask image created using annotation tools can be uploaded to specify a region of interest in the image. While this step is optional, it is recommended as it helps define specific areas to be considered during video processing, increasing the focus and relevance of the analysis. Below, we have provided a tutorial on creating a mask image using the open-source graphical annotation tool [LabelMe](https://github.com/labelmeai/labelme). 
 
 #### 3.1.1 Creating a [Conda environment](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) with Python installed <a name="section-3-1-1"></a>
 ```bash
@@ -126,7 +126,7 @@ labelme
 
 #### 3.1.5 Creating a mask for the region of interest using `LabelMe` <a name="section-3-1-5"></a>
 
-Get a frame from your video, and use it for creating a mask. Make sure the frame size is the same as your video's resolution. If you're using VLC/Quicktime Player, there's a function there that captures a frame from the video.
+Extract a frame from your video and use it to create a mask. Make sure the frame size matches your video’s resolution. If you are using VLC or QuickTime Player,  you can use a built-in function to capture a frame from the video.
 
 ![image](AnimalMotionViz_sourcecode/assets/labelme.gif)
 
@@ -143,13 +143,13 @@ labelme_json_to_dataset annotation.json -o annotation_json
 
 ##### **Note that only the mask image, `label.png`, will need to be uploaded in step 4.2.2 to specify a region of interest.**
 
-## Section 4: How AnimalMotionViz works and it usage <a name="section-4"></a>
+## Section 4: How AnimalMotionViz works and its application <a name="section-4"></a>
 
 After setting up the necessary dependencies, we are ready to use the `AnimalMotionViz` software. This section provides detailed instructions on how to run and operate the `AnimalMotionViz` app. The source code of `AnimalMotionViz` is available at AnimalMotionViz_sourcecode [AnimalMotionViz_sourcecode](https://github.com/uf-aiaos/AnimalMotionViz/blob/main/AnimalMotionViz_sourcecode/).
 
 ### 4.1 Overview of AnimalMotionViz <a name="section-4-1"></a>
 
-`AnimalMotionViz` facilitates the uploading of video files via the [dash-uploader](https://github.com/fohrloop/dash-uploader) component, with an option to include an optional mask defining the Region of Interest (ROI). The software offers various background subtraction algorithms like [MOG2](https://docs.opencv.org/3.4/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html), [KNN](https://docs.opencv.org/3.4/db/d88/classcv_1_1BackgroundSubtractorKNN.html), [GMG](https://docs.opencv.org/4.x/d1/d5c/classcv_1_1bgsegm_1_1BackgroundSubtractorGMG.html), [CNT](https://docs.opencv.org/4.x/de/dca/classcv_1_1bgsegm_1_1BackgroundSubtractorCNT.html), [GSOC](https://docs.opencv.org/4.x/d4/dd5/classcv_1_1bgsegm_1_1BackgroundSubtractorGSOC.html), and [LSBP](https://docs.opencv.org/4.x/de/d4c/classcv_1_1bgsegm_1_1BackgroundSubtractorLSBP.html), implemented using OpenCV. Then users can specify the interval for frame processing (e.g., every nth frame). Users can also select a [kernel size](https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#gac342a1bb6eabf6f55c803b09268e36dc:~:text=Mat%20cv%3A%3AgetStructuringElement) for the [morphological operation](https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga67493776e3ad1a3df63883829375201f:~:text=%E2%97%86-,morphologyEx(),-void%20cv%3A%3AmorphologyEx), where it can mitigate small noises (birds, leaves, et.), as well as the weight [(alpha and beta)](https://docs.opencv.org/3.4/d2/de8/group__core__array.html#gafafb2513349db3bcff51f54ee5592a19:~:text=%E2%97%86-,addWeighted(),-void%20cv%3A%3AaddWeighted) of the original frame and motion map overlay, respectively. Additionally, core and full range analysis is computed by applying [Kernel Density Estimation (KDE)](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html) to the centroids of detected [contours](https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html#ga2c759ed9f497d4a618048a2f56dc97f1:~:text=%E2%97%86-,contourArea(),-double%20cv%3A%3AcontourArea) representing motion. The core range identifies areas with the highest motion density (50% isopleth), while the full range captures almost all detected motion (95% isopleth). Convex hulls are also computed to outline the external boundaries of detected motion regions, providing a comprehensive view of the movements. Several [colormaps](https://docs.opencv.org/4.x/d3/d50/group__imgproc__colormap.html#:~:text=ColormapTypes-,Enumerations,-enum%20%C2%A0) like `Bone`, `Ocean`, `Pink`, and `Hot` are available for enhancing the visualization of the motion map. The space-use distribution map is generated by applying a colormap to the accumulated image obtained from background subtraction and filtering, which is then overlaid on the original frame.
+`AnimalMotionViz` facilitates the uploading of video files via the [dash-uploader](https://github.com/fohrloop/dash-uploader) component, with an option to include an optional mask defining the Region of Interest (ROI). The software offers various background subtraction algorithms like [MOG2](https://docs.opencv.org/3.4/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html), [KNN](https://docs.opencv.org/3.4/db/d88/classcv_1_1BackgroundSubtractorKNN.html), [GMG](https://docs.opencv.org/4.x/d1/d5c/classcv_1_1bgsegm_1_1BackgroundSubtractorGMG.html), [CNT](https://docs.opencv.org/4.x/de/dca/classcv_1_1bgsegm_1_1BackgroundSubtractorCNT.html), [GSOC](https://docs.opencv.org/4.x/d4/dd5/classcv_1_1bgsegm_1_1BackgroundSubtractorGSOC.html), and [LSBP](https://docs.opencv.org/4.x/de/d4c/classcv_1_1bgsegm_1_1BackgroundSubtractorLSBP.html), implemented using OpenCV. Then users can specify the interval for frame processing (e.g., every nth frame). Users can also select a [kernel size](https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#gac342a1bb6eabf6f55c803b09268e36dc:~:text=Mat%20cv%3A%3AgetStructuringElement) for the [morphological operation](https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga67493776e3ad1a3df63883829375201f:~:text=%E2%97%86-,morphologyEx(),-void%20cv%3A%3AmorphologyEx), which can mitigate small noise (birds, leaves, etc.), as well as the weight [(alpha and beta)](https://docs.opencv.org/3.4/d2/de8/group__core__array.html#gafafb2513349db3bcff51f54ee5592a19:~:text=%E2%97%86-,addWeighted(),-void%20cv%3A%3AaddWeighted) of the original frame and motion map overlay, respectively. Additionally, core and full range analysis is computed by applying [Kernel Density Estimation (KDE)](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html) to the centroids of detected [contours](https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html#ga2c759ed9f497d4a618048a2f56dc97f1:~:text=%E2%97%86-,contourArea(),-double%20cv%3A%3AcontourArea) representing motion. The core range identifies areas with the highest motion density (50% isopleth), while the full range captures almost all detected motion (95% isopleth). Convex hulls are also computed to outline the external boundaries of detected motion regions, providing a comprehensive view of the movements. Several [colormaps](https://docs.opencv.org/4.x/d3/d50/group__imgproc__colormap.html#:~:text=ColormapTypes-,Enumerations,-enum%20%C2%A0) like `Bone`, `Ocean`, `Pink`, and `Hot` are available for enhancing the visualization of the motion map. The space-use distribution map is generated by applying a colormap to the accumulated image obtained from background subtraction and filtering, which is then overlaid on the original frame.
 
 ### 4.2 Guidelines on setting up the video processing parameters <a name="section-4-2"></a>
 
@@ -161,11 +161,11 @@ Upload the video file for tracking animal motion patterns. The software supports
 
 #### 4.2.2 Uploading the mask image if available<a name="section-4-2-2"></a>
 
-You may upload a mask (e.g., label.png file created above using LabelMe) to define the region or area of interest, which can be applied during video processing. 
+You may upload a mask (e.g., the label.png file created above using LabelMe) to define the region or area of interest, which can be applied during video processing. 
 
 #### 4.2.3 Selecting a background subtraction algorithm <a name="section-4-2-3"></a>
 
-Choose from a selection of background subtraction algorithms, including [MOG2](https://docs.opencv.org/3.4/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html), [KNN](https://docs.opencv.org/3.4/db/d88/classcv_1_1BackgroundSubtractorKNN.html), [GMG](https://docs.opencv.org/4.x/d1/d5c/classcv_1_1bgsegm_1_1BackgroundSubtractorGMG.html), [CNT](https://docs.opencv.org/4.x/de/dca/classcv_1_1bgsegm_1_1BackgroundSubtractorCNT.html), [GSOC](https://docs.opencv.org/4.x/d4/dd5/classcv_1_1bgsegm_1_1BackgroundSubtractorGSOC.html), and [LSBP](https://docs.opencv.org/4.x/de/d4c/classcv_1_1bgsegm_1_1BackgroundSubtractorLSBP.html), implemented using OpenCV.
+Choose a background subtraction algorithm from [MOG2](https://docs.opencv.org/3.4/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html), [KNN](https://docs.opencv.org/3.4/db/d88/classcv_1_1BackgroundSubtractorKNN.html), [GMG](https://docs.opencv.org/4.x/d1/d5c/classcv_1_1bgsegm_1_1BackgroundSubtractorGMG.html), [CNT](https://docs.opencv.org/4.x/de/dca/classcv_1_1bgsegm_1_1BackgroundSubtractorCNT.html), [GSOC](https://docs.opencv.org/4.x/d4/dd5/classcv_1_1bgsegm_1_1BackgroundSubtractorGSOC.html), and [LSBP](https://docs.opencv.org/4.x/de/d4c/classcv_1_1bgsegm_1_1BackgroundSubtractorLSBP.html), implemented using OpenCV.
 
 #### 4.2.4:  Specifying the frame processing interval <a name="section-4-2-4"></a>
 
@@ -177,7 +177,7 @@ Here, users can specify the [kernel size](https://docs.opencv.org/4.x/d4/d86/gro
 
 #### 4.2.6 Selecting a threshold value for filtering detected motions <a name="section-4-2-6"></a>
 
-A [threshold value](https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html#ga2c759ed9f497d4a618048a2f56dc97f1:~:text=%E2%97%86-,contourArea(),-double%20cv%3A%3AcontourArea) can be set to filter the detected movements, focusing on more significant motions when calculating the core and full range. Increasing the threshold will exclude smaller movements and noise, allowing the analysis to focus on substantial motion patterns while reducing the effect of small noises.
+A [threshold value](https://docs.opencv.org/4.x/d3/dc0/group__imgproc__shape.html#ga2c759ed9f497d4a618048a2f56dc97f1:~:text=%E2%97%86-,contourArea(),-double%20cv%3A%3AcontourArea) can be set to filter the detected movements, focusing on more significant motions when calculating the core and full range. Increasing the threshold will exclude smaller movements and noise, allowing the analysis to focus on substantial motion patterns while reducing the effect of small noise.
 
 #### 4.2.7 Choosing the overlay parameters <a name="section-4-2-7"></a>
 
