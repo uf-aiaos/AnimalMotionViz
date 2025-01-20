@@ -1,4 +1,4 @@
-<img src= 'https://github.com/uf-aiaos/AnimalMotionViz/blob/main/AnimalMotionViz_sourcecode/assets/AnimalMotionViz.png' height="200" align="right"/>
+<img src= 'https://github.com/uf-aiaos/AnimalMotionViz/blob/angelo/AnimalMotionViz_sourcecode/assets/AnimalMotionViz.png' height="200" align="right"/>
 <h1 align="center">AnimalMotionViz</h1>
 
 <p align="center">
