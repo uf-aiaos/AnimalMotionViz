@@ -55,7 +55,7 @@ To provide novel insight into the movement and space use of dairy cattle, we dev
 
 We provide a video demo below to showcase the usage of our `AnimalMotionViz` software.
 
-### 1.1 AnimalMotionViz demo video [[Video demo](https://youtu.be/3KZ_8LU_vTA)]<a name="section-1-1"></a>
+### 1.1 AnimalMotionViz demo video [[Video demo](https://youtu.be/ar-coaOhjsk)]<a name="section-1-1"></a>
 
 
 ## Section 2: Setting up the environment for running AnimalMotionViz locally <a name="section-2"></a>
