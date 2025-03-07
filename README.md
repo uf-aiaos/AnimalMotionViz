@@ -226,7 +226,7 @@ Run the video analysis to track and visualize animal motion patterns based on th
 ## References <a name="section-reference"></a>
 If you use the materials provided in this repository, we kindly ask you to cite our papers: 
 
-- The software paper: De Castro, A.L., Wang, J., Bonnie-King, J.G., Morota, G., Miller-Cushon, E.K., and Yu, H., 2025. AnimalMotionViz: An interactive software tool for tracking and visualizing animal motion patterns using computer vision. *JDS Communications*. In press. https://doi.org/10.1101/2024.10.22.619671
+- The software paper: De Castro, A.L., Wang, J., Bonnie-King, J.G., Morota, G., Miller-Cushon, E.K., and Yu, H., 2025. AnimalMotionViz: An interactive software tool for tracking and visualizing animal motion patterns using computer vision. *JDS Communications*. [https://doi.org/10.1101/2024.10.22.619671](https://doi.org/10.3168/jdsc.2024-0706)
  
 - The application paper: Marin, M.U., Gingerich, K.N., Wang, J., Yu, H. and Miller-Cushon, E.K., 2024. Effects of space allowance on patterns of activity in group-housed dairy calves. *JDS Communications*.
 
